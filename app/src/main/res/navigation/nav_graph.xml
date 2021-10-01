@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/fragmentGallery">
+
+    <fragment
+        android:id="@+id/fragmentGallery"
+        android:name="com.rsschool.catsapp.ui.GalleryFragment"
+        android:label="Cats gallery"
+        tools:layout="@layout/fragment_gallery">
+        <action
+            android:id="@+id/action_fragmentGallery_to_imageDetailsFragment"
+            app:destination="@id/imageDetailsFragment"
+            app:enterAnim="@anim/card_flip_left_in"
+            app:exitAnim="@anim/card_flip_left_out" />
+    </fragment>
+    <fragment
+        android:id="@+id/imageDetailsFragment"
+        android:name="com.rsschool.catsapp.ui.ImageDetailsFragment"
+        android:label="Image Details">
+        <argument
+            android:name="image"
+            app:argType="com.rsschool.catsapp.model.Cat"
+            app:nullable="true" />
+    </fragment>
+</navigation>
