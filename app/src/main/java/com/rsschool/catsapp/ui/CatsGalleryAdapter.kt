@@ -11,7 +11,8 @@ import com.rsschool.catsapp.R
 import com.rsschool.catsapp.databinding.CatItemBinding
 import com.rsschool.catsapp.model.Cat
 
-class CatsGalleryAdapter(private val listener: OnImageClickListener) : PagingDataAdapter<Cat, CatsGalleryAdapter.CatImageViewHolder>(IMAGE_COMPARATOR) {
+class CatsGalleryAdapter(private val listener: OnImageClickListener) :
+    PagingDataAdapter<Cat, CatsGalleryAdapter.CatImageViewHolder>(IMAGE_COMPARATOR) {
 
     companion object {
         private val IMAGE_COMPARATOR = object : DiffUtil.ItemCallback<Cat>() {
@@ -44,25 +45,24 @@ class CatsGalleryAdapter(private val listener: OnImageClickListener) : PagingDat
             itemView.setOnClickListener {
                 val position = bindingAdapterPosition
                 if (position != -1) {
-                    getItem(position)?.let { it ->
+                    getItem(position)?.let {
                         listener.onItemClick(it)
                     }
                 }
             }
         }
 
-            fun bind(cat: Cat) {
-                binding.apply {
-                    Glide.with(itemView).load(cat.url).centerCrop()
-                        .transition(DrawableTransitionOptions.withCrossFade())
-                        .error(R.drawable.ic_baseline_error_outline_24)
-                        .into(imageCard)
-                }
+        fun bind(cat: Cat) {
+            binding.apply {
+                Glide.with(itemView).load(cat.url).centerCrop()
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .error(R.drawable.ic_outline_sentiment_very_dissatisfied_24)
+                    .into(imageCard)
             }
         }
+    }
 
     interface OnImageClickListener {
         fun onItemClick(image: Cat)
-
     }
 }

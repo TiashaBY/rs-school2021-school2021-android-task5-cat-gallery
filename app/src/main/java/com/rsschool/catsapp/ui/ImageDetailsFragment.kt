@@ -4,32 +4,37 @@ import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.navArgs
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.rsschool.catsapp.R
-import com.rsschool.catsapp.databinding.FragmentImageDetailBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import android.os.Environment.DIRECTORY_PICTURES
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import com.rsschool.catsapp.model.Cat
-import java.net.URL
-import android.graphics.drawable.BitmapDrawable
-import android.view.*
-import androidx.navigation.ui.onNavDestinationSelected
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.navArgs
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.gif.GifDrawable
-import kotlinx.coroutines.cancel
-import java.io.*
+import com.rsschool.catsapp.R
+import com.rsschool.catsapp.databinding.FragmentImageDetailBinding
+import com.rsschool.catsapp.model.Cat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import java.net.URL
 import java.nio.ByteBuffer
-
 
 class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
     private val args by navArgs<ImageDetailsFragmentArgs>()
@@ -60,7 +65,7 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentImageDetailBinding.inflate(inflater, container, false)
-        return binding!!.root //todo
+        return binding!!.root // todo
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -68,7 +73,7 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         setHasOptionsMenu(true)
         binding?.apply {
             Glide.with(this@ImageDetailsFragment).load(image?.url)
-                .error(R.drawable.ic_baseline_error_outline_24)
+                .error(R.drawable.ic_outline_sentiment_very_dissatisfied_24)
                 .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
 /*                .listener(object: RequestListener<Drawable> {
                     override fun onLoadFailed(
@@ -99,11 +104,12 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         }
     }
 
-    //MENU STUFF
+    // MENU STUFF
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.toolbar_menu, menu)
     }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.save -> {
             val permission = WRITE_EXTERNAL_STORAGE
@@ -117,11 +123,11 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
                 permissionLauncher?.launch(permission)
             }
             true
-        } else -> {
+        }
+        else -> {
             super.onOptionsItemSelected(item)
         }
     }
-
 
     private fun saveImage(image: Cat?) {
         CoroutineScope(Dispatchers.IO).launch {
@@ -130,8 +136,8 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
                     Glide.with(this@ImageDetailsFragment)
                         .asDrawable()
                         .load(it.url)
-                        .placeholder(android.R.drawable.progress_indeterminate_horizontal) // need placeholder to avoid issue like glide annotations
-                        .error(android.R.drawable.stat_notify_error) // need error to avoid issue like glide annotations
+                        .placeholder(android.R.drawable.progress_indeterminate_horizontal)
+                        .error(android.R.drawable.stat_notify_error)
                         .submit()
                         .get(),
                     it.url
@@ -161,7 +167,7 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
                     bytes = bos.toByteArray()
                 }
                 else -> {
-                    //toast unsupported filetype
+                    // toast unsupported filetype
                 }
             }
             bytes?.let { output.write(it, 0, it.size) }
@@ -171,7 +177,6 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
             e.printStackTrace()
         }
     }
-
 
     private fun getFileName(url: String): String? {
         val uri = URL(url)
@@ -192,10 +197,3 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         }
     }
 }
-
-
-/*    private fun getFileName(url : String) : String{
-        val uri = URL(url)
-        return File(uri.getPath()).getName()
-        //val filename = File(uri.getPath()).getName()
-    }*/

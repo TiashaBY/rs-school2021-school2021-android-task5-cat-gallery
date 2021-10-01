@@ -8,9 +8,11 @@ import androidx.paging.LoadStateAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.rsschool.catsapp.databinding.LoadingStateLayoutBinding
 
-class CatsGalleryLoadingStateAdapter(private val retry: () -> Unit) : LoadStateAdapter<CatsGalleryLoadingStateAdapter.LoadingStateViewHolder>() {
+class CatsGalleryLoadingStateAdapter(private val retry: () -> Unit) :
+    LoadStateAdapter<CatsGalleryLoadingStateAdapter.LoadingStateViewHolder>() {
 
-    inner class LoadingStateViewHolder(private val binding: LoadingStateLayoutBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class LoadingStateViewHolder(private val binding: LoadingStateLayoutBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         init {
             binding.retryButton.setOnClickListener {
                 retry.invoke()
@@ -26,15 +28,18 @@ class CatsGalleryLoadingStateAdapter(private val retry: () -> Unit) : LoadStateA
                 binding.progressBar.isVisible = false
             }
         }
-
     }
 
     override fun onBindViewHolder(holder: LoadingStateViewHolder, loadState: LoadState) {
         holder.bind(loadState)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, loadState: LoadState): LoadingStateViewHolder {
-        val binding = LoadingStateLayoutBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        loadState: LoadState
+    ): LoadingStateViewHolder {
+        val binding =
+            LoadingStateLayoutBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return LoadingStateViewHolder(binding)
     }
 }

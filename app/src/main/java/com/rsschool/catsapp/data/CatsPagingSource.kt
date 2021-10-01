@@ -4,12 +4,12 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.rsschool.catsapp.api.CatsApi
 import com.rsschool.catsapp.model.Cat
-import retrofit2.HttpException
 import java.io.IOException
+import retrofit2.HttpException
 
 private const val START_PAGE_INDEX = 0
 
-class CatsPagingSource (
+class CatsPagingSource(
     private val catsApi: CatsApi
 ) : PagingSource<Int, Cat>() {
     override fun getRefreshKey(state: PagingState<Int, Cat>): Int? {
@@ -26,7 +26,7 @@ class CatsPagingSource (
                 prevKey = if (position == START_PAGE_INDEX) null else position - 1,
                 nextKey = if (images.isEmpty()) null else position + 1
             )
-        } catch (ex : IOException) {
+        } catch (ex: IOException) {
             LoadResult.Error(ex)
         } catch (ex: HttpException) {
             LoadResult.Error(ex)

@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import com.rsschool.catsapp.databinding.FragmentGalleryBinding
 import com.rsschool.catsapp.model.Cat
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,12 +23,12 @@ class GalleryFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         binding = FragmentGalleryBinding.inflate(inflater, container, false)
-        return binding?.root!! //todo
+        return binding?.root!! // todo
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val catsAdapter = CatsGalleryAdapter(object: CatsGalleryAdapter.OnImageClickListener {
+        val catsAdapter = CatsGalleryAdapter(object : CatsGalleryAdapter.OnImageClickListener {
             override fun onItemClick(image: Cat) {
                 val action = GalleryFragmentDirections.actionFragmentGalleryToImageDetailsFragment(image)
                 findNavController().navigate(action)
@@ -36,16 +36,15 @@ class GalleryFragment : Fragment() {
         })
 
         binding?.listRecyclerView?.apply {
-            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            layoutManager = GridLayoutManager(context, 2)
             setHasFixedSize(true)
             adapter = catsAdapter.withLoadStateFooter(
-                footer = CatsGalleryLoadingStateAdapter{ catsAdapter.retry() }
+                footer = CatsGalleryLoadingStateAdapter { catsAdapter.retry() }
             )
         }
         viewModel.cats.observe(viewLifecycleOwner) {
             catsAdapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
-
     }
 
     override fun onDestroy() {
