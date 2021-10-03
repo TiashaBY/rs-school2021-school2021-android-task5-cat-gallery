@@ -2,8 +2,8 @@
     <!-- Base application theme. -->
     <style name="Theme.CatsApp" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@android:color/darker_gray</item>
-        <item name="colorPrimaryVariant">@android:color/holo_purple</item>
+        <item name="colorPrimary">#69C5EE</item>
+        <item name="colorPrimaryVariant">#2196F3</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@android:color/darker_gray</item>
