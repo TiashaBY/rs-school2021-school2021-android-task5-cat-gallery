@@ -6,6 +6,7 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.rsschool.catsapp.R
 import com.rsschool.catsapp.databinding.CatItemBinding
@@ -56,6 +57,7 @@ class CatsGalleryAdapter(private val listener: OnImageClickListener) :
             binding.apply {
                 Glide.with(itemView).load(cat.url).centerCrop()
                     .transition(DrawableTransitionOptions.withCrossFade())
+                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                     .error(R.drawable.ic_outline_sentiment_very_dissatisfied_24)
                     .into(imageCard)
             }

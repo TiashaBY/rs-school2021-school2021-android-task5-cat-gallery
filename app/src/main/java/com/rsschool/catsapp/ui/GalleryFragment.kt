@@ -7,54 +7,60 @@ import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.paging.LoadState
 import androidx.recyclerview.widget.GridLayoutManager
 import com.rsschool.catsapp.databinding.FragmentGalleryBinding
 import com.rsschool.catsapp.model.Cat
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class GalleryFragment : Fragment() {
     private var binding: FragmentGalleryBinding? = null
     private val viewModel by viewModels<CatsViewModel>()
+    private val COLUMNS_NUMBER = 2
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
+    ): View? {
         binding = FragmentGalleryBinding.inflate(inflater, container, false)
-        return binding?.root!! // todo
+        return binding?.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val catsAdapter = CatsGalleryAdapter(object : CatsGalleryAdapter.OnImageClickListener {
             override fun onItemClick(image: Cat) {
-                val action = GalleryFragmentDirections.actionFragmentGalleryToImageDetailsFragment(image)
+                val action =
+                    GalleryFragmentDirections.actionFragmentGalleryToImageDetailsFragment(image)
                 findNavController().navigate(action)
             }
         })
 
+        val footer = CatsGalleryLoadingStateAdapter { catsAdapter.retry() }
+        val header = CatsGalleryLoadingStateAdapter { catsAdapter.retry() }
+
         binding?.apply {
-            listRecyclerView.layoutManager = GridLayoutManager(context, 2)
-            listRecyclerView.setHasFixedSize(true)
-            listRecyclerView.adapter = catsAdapter.withLoadStateHeaderAndFooter(
-                footer = CatsGalleryLoadingStateAdapter { catsAdapter.retry() },
-                header = CatsGalleryLoadingStateAdapter { catsAdapter.retry() }
-            )
-            retryButton.setOnClickListener {
-                catsAdapter.retry()
+            listRecyclerView.layoutManager = GridLayoutManager(context, COLUMNS_NUMBER).apply {
+                spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                    override fun getSpanSize(position: Int): Int {
+                        return if (position == catsAdapter.itemCount && (header.itemCount > 0 || footer.itemCount > 0)) {
+                            COLUMNS_NUMBER
+                        } else {
+                            1
+                        }
+                    }
+                }
+                listRecyclerView.setHasFixedSize(true)
+                listRecyclerView.adapter = catsAdapter.withLoadStateHeaderAndFooter(footer, header)
+                retryButton.setOnClickListener {
+                    catsAdapter.retry()
+                }
             }
         }
-        lifecycleScope.launch {
-            viewModel.cats.observe(viewLifecycleOwner) {
-                catsAdapter.submitData(viewLifecycleOwner.lifecycle, it)
-                }
-        }
+
         catsAdapter.addLoadStateListener { loadState ->
             binding?.apply {
                 progressBar.isVisible = loadState.source.refresh is LoadState.Loading
@@ -62,14 +68,16 @@ class GalleryFragment : Fragment() {
                 retryButton.isVisible = loadState.source.refresh is LoadState.Error
                 // empty view
                 if (loadState.source.refresh is LoadState.NotLoading &&
-                    catsAdapter.itemCount < 1) {
+                    catsAdapter.itemCount < 1
+                ) {
                     listRecyclerView.isVisible = false
-                    noResultsText.isVisible = true
                     retryButton.isVisible = true
-                } else {
-                    noResultsText.isVisible = false
                 }
             }
+        }
+
+        viewModel.cats.observe(viewLifecycleOwner) {
+            catsAdapter.submitData(viewLifecycleOwner.lifecycle, it)
         }
     }
 

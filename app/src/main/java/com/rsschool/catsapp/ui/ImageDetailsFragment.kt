@@ -21,7 +21,6 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.rsschool.catsapp.R
 import com.rsschool.catsapp.databinding.FragmentImageDetailBinding
@@ -50,8 +49,7 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
             } else {
                 Toast.makeText(
                     context,
-                    "Permission to access the storage is not granted, " +
-                            "please review the permissions in app settings",
+                    getString(R.string.permission_not_granted),
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -62,9 +60,9 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
+    ): View? {
         binding = FragmentImageDetailBinding.inflate(inflater, container, false)
-        return binding!!.root // todo
+        return binding?.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -72,7 +70,7 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         setHasOptionsMenu(true)
         binding?.apply {
             displayImage()
-            textDescription.text = viewModel.image?.id.toString()
+            textDescription.text = "URL: ${viewModel.image?.url.toString()}"
         }
     }
 
@@ -94,10 +92,11 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
     }
 
     private fun displayImage() {
-        Glide.with(this@ImageDetailsFragment).load(viewModel.image?.url)
-            .error(R.drawable.ic_outline_sentiment_very_dissatisfied_24)
-            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
-            .into(binding?.catImage!!)
+        binding?.catImage?.let {
+            Glide.with(this@ImageDetailsFragment).load(viewModel.image?.url)
+                .error(R.drawable.ic_outline_sentiment_very_dissatisfied_24)
+                .into(it)
+        }
     }
 
     private fun writeImageToFile(drawable: Drawable?, url: String) {
@@ -123,7 +122,7 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
                 else -> {
                     Toast.makeText(
                         context,
-                        "Unsupported file type. File is not saved",
+                        getString(R.string.unsupported_file_type),
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -134,7 +133,7 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         } catch (e: IOException) {
             Toast.makeText(
                 context,
-                "An error occurred while saving the file",
+                getString(R.string.error_saving),
                 Toast.LENGTH_SHORT
             ).show()
             e.printStackTrace()
@@ -183,5 +182,10 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         else -> {
             super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        binding = null
     }
 }

@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Cats app</string>
+    <string name="error_saving">An error occurred while saving the file</string>
+    <string name="permission_not_granted">"Permission to access the storage is not granted\n, please review the permissions in app settings"</string>
+    <string name="unsupported_file_type">Unsupported file type. File is not saved</string>
+    <string name="retry_loading">Retry loading</string>
 </resources>
