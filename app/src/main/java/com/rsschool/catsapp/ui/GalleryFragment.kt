@@ -19,7 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class GalleryFragment : Fragment() {
     private var binding: FragmentGalleryBinding? = null
     private val viewModel by viewModels<CatsViewModel>()
-    private val COLUMNS_NUMBER = 2
+    private val columnsNumber = 2
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,11 +44,13 @@ class GalleryFragment : Fragment() {
         val header = CatsGalleryLoadingStateAdapter { catsAdapter.retry() }
 
         binding?.apply {
-            listRecyclerView.layoutManager = GridLayoutManager(context, COLUMNS_NUMBER).apply {
+            listRecyclerView.layoutManager = GridLayoutManager(context, columnsNumber).apply {
                 spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                     override fun getSpanSize(position: Int): Int {
-                        return if (position == catsAdapter.itemCount && (header.itemCount > 0 || footer.itemCount > 0)) {
-                            COLUMNS_NUMBER
+                        return if (position == catsAdapter.itemCount
+                            && (header.itemCount > 0 || footer.itemCount > 0)
+                        ) {
+                            columnsNumber
                         } else {
                             1
                         }

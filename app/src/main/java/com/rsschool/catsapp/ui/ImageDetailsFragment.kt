@@ -1,13 +1,16 @@
 package com.rsschool.catsapp.ui
 
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.os.Environment
+import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -21,16 +24,19 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.rsschool.catsapp.R
 import com.rsschool.catsapp.databinding.FragmentImageDetailBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.OutputStream
 import java.net.URL
 import java.nio.ByteBuffer
 
@@ -70,7 +76,7 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         setHasOptionsMenu(true)
         binding?.apply {
             displayImage()
-            textDescription.text = "URL: ${viewModel.image?.url.toString()}"
+            textDescription.text = "URL: ${viewModel.image?.url}"
         }
     }
 
@@ -81,8 +87,6 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
                     Glide.with(this@ImageDetailsFragment)
                         .asDrawable()
                         .load(it.url)
-                        .placeholder(android.R.drawable.progress_indeterminate_horizontal)
-                        .error(android.R.drawable.stat_notify_error)
                         .submit()
                         .get(),
                     it.url
@@ -95,68 +99,90 @@ class ImageDetailsFragment : Fragment(R.layout.fragment_image_detail) {
         binding?.catImage?.let {
             Glide.with(this@ImageDetailsFragment).load(viewModel.image?.url)
                 .error(R.drawable.ic_outline_sentiment_very_dissatisfied_24)
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
                 .into(it)
         }
     }
 
-    private fun writeImageToFile(drawable: Drawable?, url: String) {
-        var file: File? = null
-        return try {
-            getFileName(url)?.let { file = File(it) }
-            file?.createNewFile()
-            val output = FileOutputStream(file)
-            var bytes: ByteArray? = null
+    private suspend fun writeImageToFile(drawable: Drawable?, url: String) {
+        val path = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        } else {
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        }
 
-            when (drawable) {
-                is GifDrawable -> {
-                    val byteBuffer = drawable.buffer
-                    bytes = ByteArray(byteBuffer.capacity())
-                    (byteBuffer.duplicate().clear() as ByteBuffer).get(bytes)
-                }
-                is BitmapDrawable -> {
-                    val bos = ByteArrayOutputStream()
-                    val bitmap = drawable.bitmap
-                    bitmap?.compress(Bitmap.CompressFormat.PNG, 0, bos)
-                    bytes = bos.toByteArray()
-                }
-                else -> {
-                    Toast.makeText(
-                        context,
-                        getString(R.string.unsupported_file_type),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+        var bytes: ByteArray? = null
+        when (drawable) {
+            is GifDrawable -> {
+                val byteBuffer = drawable.buffer
+                bytes = ByteArray(byteBuffer.capacity())
+                (byteBuffer.duplicate().clear() as ByteBuffer).get(bytes)
             }
-            bytes?.let { output.write(it, 0, it.size) }
-            output.flush()
-            output.close()
-        } catch (e: IOException) {
-            Toast.makeText(
-                context,
-                getString(R.string.error_saving),
-                Toast.LENGTH_SHORT
-            ).show()
-            e.printStackTrace()
+            is BitmapDrawable -> {
+                val bos = ByteArrayOutputStream()
+                val bitmap = drawable.bitmap
+                bitmap?.compress(Bitmap.CompressFormat.PNG, 0, bos)
+                bytes = bos.toByteArray()
+            }
+            else -> {
+                Toast.makeText(
+                    context,
+                    getString(R.string.unsupported_file_type),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+        // Save the image.
+        val contentUri: Uri? = context?.contentResolver?.insert(path, getImageDetails(url))
+        val outputStream: FileOutputStream? = null
+        try {
+            contentUri?.let { uri ->
+                if (bytes == null) context?.contentResolver?.delete(uri, null, null)
+                val outputStream: OutputStream? = context?.contentResolver?.openOutputStream(uri)
+                bytes?.let { outputStream?.write(it, 0, it.size) }
+            } ?: throw NullPointerException("Content is null")
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    getString(R.string.error_saving),
+                    Toast.LENGTH_SHORT
+                ).show()
+                e.printStackTrace()
+            }
+        } finally {
+            withContext(Dispatchers.IO) {
+                outputStream?.flush()
+                outputStream?.close()
+            }
         }
     }
 
-    private fun getFileName(url: String): String? {
+    private fun getImageDetails(url: String): ContentValues? {
         val uri = URL(url)
-        val path = this.context?.getExternalFilesDir(Environment.DIRECTORY_PICTURES).toString() + File.separator
         return try {
             val f = File(uri.path)
             val fileName = f.nameWithoutExtension
             val extension = f.extension
-            var file = File("$path$fileName.$extension")
-            var num = 1
-            while (file.exists()) {
-                file = File("$path$fileName($num).$extension")
-                num++
+            val file = getFileWithName(fileName, extension)
+            ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, file.absolutePath)
+                put(MediaStore.Images.Media.MIME_TYPE, "image/$extension")
+                put(MediaStore.MediaColumns.DATE_ADDED, System.currentTimeMillis())
             }
-            file.absolutePath
         } catch (e: IOException) {
             null
         }
+    }
+
+    private fun getFileWithName(fileName: String, extension: String): File {
+        var file = File("$fileName.$extension")
+        var num = 1
+        while (file.exists()) {
+            file = File("$fileName($num).$extension")
+            num++
+        }
+        return file
     }
 
     // MENU STUFF
