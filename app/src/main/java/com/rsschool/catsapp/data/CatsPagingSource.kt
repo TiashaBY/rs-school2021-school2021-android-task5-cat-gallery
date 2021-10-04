@@ -4,8 +4,8 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.rsschool.catsapp.api.CatsApi
 import com.rsschool.catsapp.model.Cat
-import java.io.IOException
 import retrofit2.HttpException
+import java.io.IOException
 
 private const val START_PAGE_INDEX = 0
 

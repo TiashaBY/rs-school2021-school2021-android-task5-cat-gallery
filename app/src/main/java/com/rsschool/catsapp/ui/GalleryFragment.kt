@@ -47,8 +47,8 @@ class GalleryFragment : Fragment() {
             listRecyclerView.layoutManager = GridLayoutManager(context, columnsNumber).apply {
                 spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                     override fun getSpanSize(position: Int): Int {
-                        return if (position == catsAdapter.itemCount
-                            && (header.itemCount > 0 || footer.itemCount > 0)
+                        return if (position == catsAdapter.itemCount &&
+                            (header.itemCount > 0 || footer.itemCount > 0)
                         ) {
                             columnsNumber
                         } else {
