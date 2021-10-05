@@ -10,8 +10,9 @@ class CatsRepository @Inject constructor(private val catsApi: CatsApi) {
 
     fun getImagesList() = Pager(
         config = PagingConfig(
+            initialLoadSize = 20,
             pageSize = 10,
-            maxSize = 50,
+            maxSize = 100,
             enablePlaceholders = false
         ),
         pagingSourceFactory = { CatsPagingSource(catsApi) }

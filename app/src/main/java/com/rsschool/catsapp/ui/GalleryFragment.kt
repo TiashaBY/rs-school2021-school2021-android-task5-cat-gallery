@@ -70,7 +70,7 @@ class GalleryFragment : Fragment() {
                 listRecyclerView.isVisible = loadState.source.refresh is LoadState.NotLoading
                 retryButton.isVisible = loadState.source.refresh is LoadState.Error
                 // empty view
-                if (loadState.source.refresh is LoadState.NotLoading &&
+                if (loadState.source.refresh is LoadState.Error &&
                     catsAdapter.itemCount < 1
                 ) {
                     listRecyclerView.isVisible = false
